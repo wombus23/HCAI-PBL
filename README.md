@@ -57,3 +57,29 @@ of the pipeline the user controls and which the app decides on its own.
 
 Two sample datasets are in `project1/sample_data/`: `iris.csv` for
 classification and `diabetes.csv` for regression.
+
+### Project 2: Explainability
+
+`/project2/` — one page, four linked regions, on the Palmer Penguins dataset.
+
+- **Model and complexity.** A grid of decision trees and a grid of L1 penalised
+  logistic regressions are fitted, and a λ slider picks between the finished
+  models by maximising `accuracy − λ·Ω`. Ω is the number of leaves for a tree and
+  the number of features still in use for logistic regression. The selected model
+  is drawn, along with every model in the grid and the trade off line λ defines.
+- **Counterfactuals.** Pick a penguin and a target species, and see the closest
+  rows the model would put in that class, found by local sampling and ranked by
+  MAD weighted L1 distance. Categorical features are resampled rather than
+  noised, and contribute a flat cost when they change.
+- **Feature effects.** PDP and ALE for each of the four measurements, three
+  curves per plot, both written from scratch. ALE uses the exact analytic
+  derivative for logistic regression and finite differences for the tree, since a
+  tree has no useful derivative to integrate.
+
+All three regions read the same model, so moving the λ slider changes every one
+of them. `project2/README.md` covers the reasoning in more detail, including the
+handling of missing rows and the choice of complexity measure.
+
+The dataset ships as `project2/sample_data/penguins.csv` rather than being pulled
+in through the `palmerpenguins` package, so the app needs nothing unusual
+installed.

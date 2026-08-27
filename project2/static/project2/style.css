@@ -1,0 +1,432 @@
+/* Project 2: explainability.
+   The global stylesheet centres a single fixed box on the screen, which does
+   not work for pages that scroll. Everything here starts by undoing that. */
+
+.box .title-container {
+    display: block;
+    width: 100%;
+    text-align: center;
+    margin: 26px 0 0;
+}
+
+.box .title {
+    display: block;
+    font-size: 34px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #1c2430;
+}
+
+.box {
+    position: static;
+    top: auto;
+    left: auto;
+    transform: none;
+    width: auto;
+    max-width: 1140px;
+    margin: 0 auto;
+    display: block;
+    padding: 0 0 32px 0;
+}
+
+.p2 {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    color: #1c2430;
+    padding: 0 34px;
+}
+
+.p2 h2 {
+    font-size: 21px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    margin: 34px 0 12px;
+}
+
+.p2 p, .p2 li {
+    text-align: left;
+    font-size: 15px;
+    line-height: 1.55;
+}
+
+.p2 .lede {
+    color: #5a6473;
+    max-width: 70ch;
+}
+
+/* --- the three step rail ------------------------------------------------ */
+
+.p2-rail {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid #e2e6ec;
+    margin: 0 0 8px;
+}
+
+.p2-rail a, .p2-rail span {
+    flex: 1;
+    padding: 14px 4px 12px;
+    text-align: center;
+    font-size: 14px;
+    letter-spacing: 0.02em;
+    text-decoration: none;
+    color: #8a94a3;
+    border-bottom: 3px solid transparent;
+}
+
+.p2-rail a:hover { color: #275CB2; }
+
+.p2-rail .current {
+    color: #275CB2;
+    font-weight: 600;
+    border-bottom-color: #275CB2;
+}
+
+.p2-rail .index {
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: 12px;
+    opacity: 0.7;
+    margin-right: 6px;
+}
+
+/* --- data strip --------------------------------------------------------- */
+
+.p2-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 26px;
+    background: #f5f7fa;
+    border: 1px solid #e2e6ec;
+    border-radius: 4px;
+    padding: 14px 18px;
+    margin: 18px 0 6px;
+}
+
+.p2-meta div { font-size: 13px; color: #6b7482; }
+
+.p2-meta strong {
+    display: block;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1c2430;
+    margin-top: 2px;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+}
+
+.p2-note {
+    font-size: 13px;
+    color: #6b7482;
+    margin: 8px 0 0;
+}
+
+/* --- forms -------------------------------------------------------------- */
+
+.p2-form {
+    background: #fbfcfd;
+    border: 1px solid #e2e6ec;
+    border-radius: 4px;
+    padding: 6px 20px 18px;
+}
+
+.p2-form p { margin: 14px 0; }
+
+.p2-form label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #3d4756;
+    margin-bottom: 5px;
+}
+
+.p2-form input[type="text"],
+.p2-form input[type="number"],
+.p2-form select,
+.p2-form input[type="file"] {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 9px 10px;
+    font-size: 14px;
+    font-family: inherit;
+    border: 1px solid #ccd3dc;
+    border-radius: 3px;
+    background: white;
+}
+
+.p2-form input[type="checkbox"] { width: auto; margin-right: 7px; }
+
+.p2-form .helptext {
+    display: block;
+    font-size: 12px;
+    color: #7b8494;
+    margin-top: 4px;
+}
+
+.p2-form ul.errorlist {
+    list-style: none;
+    padding: 0;
+    margin: 6px 0;
+    color: #C1121F;
+    font-size: 13px;
+}
+
+.p2-row {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+
+.p2-row > * { flex: 1; min-width: 190px; }
+
+.p2-actions {
+    margin-top: 18px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.p2-actions button, .p2 button.p2-button {
+    width: auto;
+    display: inline-block;
+    margin: 0;
+    height: auto;
+    padding: 10px 22px;
+    font-size: 15px;
+    border-radius: 3px;
+}
+
+.p2-actions .quiet, .p2 .quiet {
+    background: transparent;
+    color: #6b7482;
+    border: 1px solid #ccd3dc;
+}
+
+.p2-link {
+    color: #275CB2;
+    font-size: 14px;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(39, 92, 178, 0.3);
+}
+
+.p2-link:hover { border-bottom-color: #275CB2; }
+
+.p2 a.p2-cta {
+    display: inline-block;
+    background-color: #275CB2;
+    color: white;
+    padding: 10px 22px;
+    font-size: 15px;
+    border-radius: 3px;
+    text-decoration: none;
+    opacity: 0.9;
+}
+
+.p2 a.p2-cta:hover { opacity: 1; }
+
+.p2-inline-form { display: inline; }
+
+/* --- tables ------------------------------------------------------------- */
+
+.p2-scroll { overflow-x: auto; }
+
+.p2-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+}
+
+.p2-table th {
+    text-align: left;
+    font-weight: 600;
+    color: #5a6473;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-bottom: 1px solid #ccd3dc;
+    padding: 8px 12px 7px;
+    white-space: nowrap;
+}
+
+.p2-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #eef1f5;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    white-space: nowrap;
+}
+
+.p2-table td.text {
+    font-family: inherit;
+    white-space: normal;
+}
+
+.p2-table tr.best td {
+    background: rgba(39, 92, 178, 0.07);
+    font-weight: 600;
+}
+
+.p2-tag {
+    display: inline-block;
+    font-family: inherit;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #e7edf7;
+    color: #275CB2;
+}
+
+.p2-tag.label-tag { background: #fdeee7; color: #E4572E; }
+
+/* --- figures ------------------------------------------------------------ */
+
+.p2-figure {
+    border: 1px solid #e2e6ec;
+    border-radius: 4px;
+    padding: 14px;
+    text-align: center;
+    background: white;
+}
+
+.p2-figure img { max-width: 100%; height: auto; }
+
+.p2-figures {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+
+.p2-figures > * { flex: 1; min-width: 320px; }
+
+/* --- messages and callouts ---------------------------------------------- */
+
+.p2-message {
+    border-left: 3px solid #275CB2;
+    background: #f2f6fc;
+    padding: 11px 14px;
+    margin: 12px 0;
+    font-size: 14px;
+}
+
+.p2-message.error {
+    border-left-color: #C1121F;
+    background: #fdf2f3;
+}
+
+.p2-callout {
+    border: 1px dashed #ccd3dc;
+    border-radius: 4px;
+    padding: 14px 16px;
+    font-size: 14px;
+    color: #4a5462;
+    background: #fbfcfd;
+}
+
+.p2-empty {
+    text-align: center;
+    color: #7b8494;
+    padding: 34px 20px;
+    border: 1px dashed #ccd3dc;
+    border-radius: 4px;
+    font-size: 15px;
+}
+
+@media (max-width: 620px) {
+    .p2 { padding: 0 16px; }
+    .p2-rail a, .p2-rail span { font-size: 12px; }
+    .p2-rail .index { display: none; }
+}
+
+/* --- project 2 specifics ------------------------------------------------ */
+
+.p2-controls {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: #ffffff;
+    border-bottom: 1px solid #e2e6ec;
+    padding: 14px 0 16px;
+    margin-bottom: 6px;
+}
+
+.p2-controls .p2-row { align-items: flex-end; }
+
+.p2-switch {
+    display: inline-flex;
+    border: 1px solid #ccd3dc;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.p2-switch label {
+    margin: 0;
+    padding: 9px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    background: white;
+    color: #3d4756;
+}
+
+.p2-switch input { position: absolute; opacity: 0; pointer-events: none; }
+
+.p2-switch input:checked + label {
+    background: #275CB2;
+    color: white;
+}
+
+.p2-slider { display: flex; align-items: center; gap: 12px; }
+
+.p2-slider input[type="range"] {
+    flex: 1;
+    min-width: 200px;
+    accent-color: #275CB2;
+}
+
+.p2-lambda {
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: 15px;
+    font-weight: 600;
+    min-width: 72px;
+    text-align: right;
+}
+
+.p2-region {
+    border-top: 2px solid #275CB2;
+    margin-top: 40px;
+    padding-top: 6px;
+}
+
+.p2-region h2 { margin-top: 14px; }
+
+.p2-region .kicker {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #275CB2;
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+.p2-table td.changed {
+    background: rgba(228, 87, 46, 0.12);
+    font-weight: 600;
+    color: #A8371A;
+}
+
+.p2-table tr.original td {
+    background: #f5f7fa;
+    font-weight: 600;
+}
+
+.p2-formula {
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    background: #f5f7fa;
+    border: 1px solid #e2e6ec;
+    border-radius: 3px;
+    padding: 10px 14px;
+    font-size: 14px;
+    display: inline-block;
+    margin: 4px 0 10px;
+}
+
+.p2-wide { overflow-x: auto; }
+.p2-wide img { max-width: none; }

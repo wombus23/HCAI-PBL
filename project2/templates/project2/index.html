@@ -1,0 +1,302 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'project2/style.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="box">
+    <div class="title-container">
+        <div class="title">Explainability</div>
+    </div>
+
+    <div class="p2">
+
+        {# ---- shared controls: everything below reacts to these two ---- #}
+        <form class="p2-controls" method="get" id="controls">
+            <div class="p2-row">
+                <div style="flex:0 0 auto;">
+                    <label>Model class</label>
+                    <div class="p2-switch">
+                        <input type="radio" name="model" value="tree" id="m-tree"
+                               {% if kind == 'tree' %}checked{% endif %}>
+                        <label for="m-tree">Decision tree</label>
+                        <input type="radio" name="model" value="logreg" id="m-logreg"
+                               {% if kind == 'logreg' %}checked{% endif %}>
+                        <label for="m-logreg">Logistic regression</label>
+                    </div>
+                </div>
+                <div style="flex:1 1 320px;">
+                    <label for="lam">λ — what one unit of complexity costs, in accuracy</label>
+                    <div class="p2-slider">
+                        <input type="range" name="lam" id="lam" value="{{ lam }}"
+                               min="0" max="{{ lam_max }}" step="{{ lam_step }}"
+                               oninput="document.getElementById('lam-value').textContent = (+this.value).toFixed(4)">
+                        <span class="p2-lambda" id="lam-value">{{ lam|floatformat:4 }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {# the remaining regions keep their own state in the same form #}
+            <input type="hidden" name="cf_index" value="{{ cf_index }}">
+            <input type="hidden" name="cf_target" value="{{ cf_target }}">
+            <input type="hidden" name="cf_k" value="{{ cf_k }}">
+            <input type="hidden" name="cf_n" value="{{ cf_n }}">
+            <input type="hidden" name="feature" value="{{ feature }}">
+
+            <div class="p2-actions">
+                <button type="submit">Update</button>
+                <span class="p2-note">
+                    Showing the {{ model_label|lower }} that maximises
+                    accuracy − λ·Ω. Ω is the number of {{ model.omega_label }}.
+                </span>
+            </div>
+        </form>
+
+        <p class="lede">Palmer Penguins: {{ data.raw|length }} penguins with complete
+        records, out of {{ data.n_raw }}. The {{ data.n_dropped }} incomplete rows are
+        dropped rather than imputed, because invented values have no business inside
+        an explanation. Three species, seven features, a 70/30 stratified split with a
+        fixed seed.</p>
+
+        {# ---------------- tasks 1 to 3 ---------------- #}
+        <div class="p2-region" id="model">
+            <div class="kicker">Tasks 1 to 3 · interpretability and model complexity</div>
+            <h2>{{ model_label }}</h2>
+
+            <div class="p2-meta">
+                <div>Test accuracy<strong>{{ model.accuracy|floatformat:3 }}</strong></div>
+                <div>Ω ({{ model.omega_label }})<strong>{{ model.omega }}</strong></div>
+                <div>Objective at this λ<strong>{{ model.accuracy|floatformat:3 }} − {{ lam|floatformat:4 }}·{{ model.omega }}</strong></div>
+                <div>Fitted with<strong>{{ model.setting_label }}</strong></div>
+            </div>
+
+            <p class="p2-note">λ is not the penalty used while fitting. Each model in
+            the grid below was fitted with its own regularization setting, and λ only
+            decides which of the finished models is worth showing.</p>
+
+            <div class="p2-figure p2-wide">
+                <img src="{{ model_figure }}" alt="The selected model">
+            </div>
+
+            <div class="p2-figures" style="margin-top:18px;">
+                <div class="p2-figure"><img src="{{ selection_figure }}" alt="Accuracy against complexity"></div>
+                <div class="p2-callout">
+                    <p>Every model in the grid is a point. The dashed line has slope λ
+                    and passes through the winner, so a model sitting above that line
+                    would have scored higher and one below it scored lower.</p>
+                    <p>Slide λ to the right and the winner walks down and to the left:
+                    accuracy is being sold off for a shorter explanation. At λ = 0 the
+                    most accurate model always wins, however tangled it is.</p>
+                </div>
+            </div>
+
+            {% if coefficient_rows %}
+            <h2>Coefficients</h2>
+            <p class="p2-note">Fitted with an L1 penalty on standardized features, so
+            coefficients are driven to exactly zero. Ω counts the original features
+            that survive, grouping the one hot columns of a categorical feature
+            together.</p>
+            <div class="p2-scroll">
+                <table class="p2-table">
+                    <tr>
+                        <th>Feature</th>
+                        {% for name in classes %}<th>{{ name }}</th>{% endfor %}
+                    </tr>
+                    {% for row in coefficient_rows %}
+                    <tr {% if not row.used %}style="opacity:0.45"{% endif %}>
+                        <td class="text">{{ row.column }}</td>
+                        {% for value in row.values %}<td>{{ value }}</td>{% endfor %}
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+            {% endif %}
+
+            <h2>Every model in the grid</h2>
+            <div class="p2-scroll">
+                <table class="p2-table">
+                    <tr>
+                        <th>Fitted with</th>
+                        <th>Ω</th>
+                        <th>Test accuracy</th>
+                        <th>accuracy − λ·Ω</th>
+                    </tr>
+                    {% for row in table %}
+                    <tr class="{% if row.chosen %}best{% endif %}">
+                        <td class="text">{{ row.setting }}</td>
+                        <td>{{ row.omega }}</td>
+                        <td>{{ row.accuracy }}</td>
+                        <td>{{ row.objective }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+
+        {# ---------------- task 4 ---------------- #}
+        <div class="p2-region" id="counterfactual">
+            <div class="kicker">Task 4 · counterfactual explanations</div>
+            <h2>Counterfactuals</h2>
+
+            <p class="lede">What would have to be different about this penguin for the
+            model to call it something else? Points are sampled around it, the ones the
+            model puts in the target class are kept, and the closest are shown.
+            Distance is L1 over the measurements weighted by their median absolute
+            deviation, plus 1 for each categorical feature that had to change.</p>
+
+            <form class="p2-form" method="get" action="{% url 'project2:index' %}#counterfactual">
+                <input type="hidden" name="model" value="{{ kind }}">
+                <input type="hidden" name="lam" value="{{ lam }}">
+                <input type="hidden" name="feature" value="{{ feature }}">
+                <div class="p2-row">
+                    <p>
+                        <label for="cf_index">Penguin</label>
+                        <select name="cf_index" id="cf_index">
+                            {% for value, label in choices %}
+                            <option value="{{ value }}" {% if value == cf_index %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </p>
+                    <p>
+                        <label for="cf_target">Target species</label>
+                        <select name="cf_target" id="cf_target">
+                            {% for name in classes %}
+                            <option value="{{ name }}" {% if name == cf_target %}selected{% endif %}>{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                    </p>
+                    <p>
+                        <label for="cf_k">How many to show</label>
+                        <input type="number" name="cf_k" id="cf_k" value="{{ cf_k }}" min="1" max="10">
+                    </p>
+                    <p>
+                        <label for="cf_n">Samples per round (N)</label>
+                        <input type="number" name="cf_n" id="cf_n" value="{{ cf_n }}" min="200" max="20000" step="200">
+                    </p>
+                </div>
+                <div class="p2-actions">
+                    <button type="submit">Find counterfactuals</button>
+                    <span class="p2-note">Actual species {{ cf_actual }}, this model predicts {{ cf_predicted }}.</span>
+                </div>
+            </form>
+
+            {% if cf_info.already %}
+                <div class="p2-message">This model already predicts {{ cf_target }} for
+                that penguin, so there is nothing to counter. Pick a different target.</div>
+            {% elif not cf_rows %}
+                <div class="p2-message error">No counterfactual found after
+                {{ cf_info.rounds }} rounds and {{ cf_info.sampled }} samples, with the
+                spread widened to {{ cf_info.sigma }} standard deviations. Try a larger N,
+                or a target species that is less far away.</div>
+            {% else %}
+                <p class="p2-note">Found {{ cf_info.found }} candidates in
+                {{ cf_info.rounds }} round{{ cf_info.rounds|pluralize }}
+                ({{ cf_info.sampled }} samples, spread {{ cf_info.sigma }} standard
+                deviations, {{ cf_info.flip }} chance of resampling a category).
+                Changed values are highlighted.</p>
+                <div class="p2-scroll">
+                    <table class="p2-table">
+                        <tr>
+                            <th></th>
+                            {% for name in feature_names %}<th>{{ name }}</th>{% endfor %}
+                            <th>Distance</th>
+                            <th>P({{ cf_target }})</th>
+                        </tr>
+                        <tr class="original">
+                            <td class="text">this penguin</td>
+                            {% for cell in cf_original.cells %}<td>{{ cell.value }}</td>{% endfor %}
+                            <td>–</td><td>–</td>
+                        </tr>
+                        {% for row in cf_rows %}
+                        <tr>
+                            <td class="text">counterfactual {{ forloop.counter }}</td>
+                            {% for cell in row.cells %}
+                            <td class="{% if cell.changed %}changed{% endif %}">{{ cell.value }}</td>
+                            {% endfor %}
+                            <td>{{ row.distance }}</td>
+                            <td>{{ row.confidence }}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+
+        {# ---------------- task 5 ---------------- #}
+        <div class="p2-region" id="effects">
+            <div class="kicker">Task 5 · global model agnostic methods</div>
+            <h2>Feature effect plots</h2>
+
+            <form class="p2-form" method="get" action="{% url 'project2:index' %}#effects">
+                <input type="hidden" name="model" value="{{ kind }}">
+                <input type="hidden" name="lam" value="{{ lam }}">
+                <input type="hidden" name="cf_index" value="{{ cf_index }}">
+                <input type="hidden" name="cf_target" value="{{ cf_target }}">
+                <input type="hidden" name="cf_k" value="{{ cf_k }}">
+                <input type="hidden" name="cf_n" value="{{ cf_n }}">
+                <div class="p2-row">
+                    <p>
+                        <label for="feature">Feature</label>
+                        <select name="feature" id="feature">
+                            {% for value, label in numeric_features %}
+                            <option value="{{ value }}" {% if value == feature %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </p>
+                </div>
+                <div class="p2-actions">
+                    <button type="submit">Draw</button>
+                    <span class="p2-note">Both plots are computed from the
+                    {{ model_label|lower }} currently selected above.</span>
+                </div>
+            </form>
+
+            <div class="p2-figures" style="margin-top:18px;">
+                <div class="p2-figure"><img src="{{ pdp_figure }}" alt="Partial dependence plot"></div>
+                <div class="p2-figure"><img src="{{ ale_figure }}" alt="Accumulated local effects plot"></div>
+            </div>
+
+            <h2>Which derivative</h2>
+            <div class="p2-callout">
+                <p>ALE integrates the average partial derivative of the predicted
+                probability with respect to the feature.</p>
+                <p class="p2-formula">ALE_c(v) = ∫ E[ ∂f_c/∂x_s | x_s = z ] dz</p>
+                {% if kind == 'logreg' %}
+                <p>For logistic regression that derivative is exact. With softmax
+                probabilities p and coefficients W, ∂p_c/∂x_s = p_c (W[c,s] −
+                Σ_k p_k W[k,s]) / scale_s, which is what this plot uses. Computing the
+                same curve by finite differences instead agrees to within
+                {{ ale_gap }}, which is a useful check that the two agree.</p>
+                {% else %}
+                <p>A decision tree is piecewise constant, so its derivative is zero
+                almost everywhere and undefined on the split points. There is nothing
+                useful to integrate, so the derivative inside each bin is replaced by
+                the finite difference across that bin's edges. That is what this plot
+                uses.</p>
+                {% endif %}
+                <p>PDP holds the rest of the row fixed and forces the feature to each
+                value on a grid, which breaks down when features are correlated: it
+                averages over penguins that could not exist. ALE only ever compares
+                predictions inside a narrow band of the feature, so it stays on the
+                data. On this dataset flipper length and body mass are strongly
+                correlated, so the two plots are worth comparing directly.</p>
+            </div>
+        </div>
+
+        <div class="p2-actions" style="margin-top:30px;">
+            <a class="p2-link" href="{% url 'home:index' %}">Back to the project hub</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Changing a control submits its own form, and the form returns to the
+    // region the control belongs to, so the page does not jump to the top.
+    document.querySelectorAll("form select, form input[type=radio], form input[type=range]")
+        .forEach(function (element) {
+            element.addEventListener("change", function () { element.form.submit(); });
+        });
+</script>
+{% endblock %}
