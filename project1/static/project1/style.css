@@ -1,0 +1,336 @@
+/* Project 1: supervised learning interface.
+   The global stylesheet centres a single fixed box on the screen, which does
+   not work for pages that scroll. Everything here starts by undoing that. */
+
+.box .title-container {
+    display: block;
+    width: 100%;
+    text-align: center;
+    margin: 26px 0 0;
+}
+
+.box .title {
+    display: block;
+    font-size: 34px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #1c2430;
+}
+
+.box {
+    position: static;
+    top: auto;
+    left: auto;
+    transform: none;
+    width: auto;
+    max-width: 1080px;
+    margin: 0 auto;
+    display: block;
+    padding: 0 0 32px 0;
+}
+
+.p1 {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    color: #1c2430;
+    padding: 0 34px;
+}
+
+.p1 h2 {
+    font-size: 21px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    margin: 34px 0 12px;
+}
+
+.p1 p, .p1 li {
+    text-align: left;
+    font-size: 15px;
+    line-height: 1.55;
+}
+
+.p1 .lede {
+    color: #5a6473;
+    max-width: 70ch;
+}
+
+/* --- the three step rail ------------------------------------------------ */
+
+.p1-rail {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid #e2e6ec;
+    margin: 0 0 8px;
+}
+
+.p1-rail a, .p1-rail span {
+    flex: 1;
+    padding: 14px 4px 12px;
+    text-align: center;
+    font-size: 14px;
+    letter-spacing: 0.02em;
+    text-decoration: none;
+    color: #8a94a3;
+    border-bottom: 3px solid transparent;
+}
+
+.p1-rail a:hover { color: #275CB2; }
+
+.p1-rail .current {
+    color: #275CB2;
+    font-weight: 600;
+    border-bottom-color: #275CB2;
+}
+
+.p1-rail .index {
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: 12px;
+    opacity: 0.7;
+    margin-right: 6px;
+}
+
+/* --- data strip --------------------------------------------------------- */
+
+.p1-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 26px;
+    background: #f5f7fa;
+    border: 1px solid #e2e6ec;
+    border-radius: 4px;
+    padding: 14px 18px;
+    margin: 18px 0 6px;
+}
+
+.p1-meta div { font-size: 13px; color: #6b7482; }
+
+.p1-meta strong {
+    display: block;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1c2430;
+    margin-top: 2px;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+}
+
+.p1-note {
+    font-size: 13px;
+    color: #6b7482;
+    margin: 8px 0 0;
+}
+
+/* --- forms -------------------------------------------------------------- */
+
+.p1-form {
+    background: #fbfcfd;
+    border: 1px solid #e2e6ec;
+    border-radius: 4px;
+    padding: 6px 20px 18px;
+}
+
+.p1-form p { margin: 14px 0; }
+
+.p1-form label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #3d4756;
+    margin-bottom: 5px;
+}
+
+.p1-form input[type="text"],
+.p1-form input[type="number"],
+.p1-form select,
+.p1-form input[type="file"] {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 9px 10px;
+    font-size: 14px;
+    font-family: inherit;
+    border: 1px solid #ccd3dc;
+    border-radius: 3px;
+    background: white;
+}
+
+.p1-form input[type="checkbox"] { width: auto; margin-right: 7px; }
+
+.p1-form .helptext {
+    display: block;
+    font-size: 12px;
+    color: #7b8494;
+    margin-top: 4px;
+}
+
+.p1-form ul.errorlist {
+    list-style: none;
+    padding: 0;
+    margin: 6px 0;
+    color: #C1121F;
+    font-size: 13px;
+}
+
+.p1-row {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+
+.p1-row > * { flex: 1; min-width: 190px; }
+
+.p1-actions {
+    margin-top: 18px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.p1-actions button, .p1 button.p1-button {
+    width: auto;
+    display: inline-block;
+    margin: 0;
+    height: auto;
+    padding: 10px 22px;
+    font-size: 15px;
+    border-radius: 3px;
+}
+
+.p1-actions .quiet, .p1 .quiet {
+    background: transparent;
+    color: #6b7482;
+    border: 1px solid #ccd3dc;
+}
+
+.p1-link {
+    color: #275CB2;
+    font-size: 14px;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(39, 92, 178, 0.3);
+}
+
+.p1-link:hover { border-bottom-color: #275CB2; }
+
+.p1 a.p1-cta {
+    display: inline-block;
+    background-color: #275CB2;
+    color: white;
+    padding: 10px 22px;
+    font-size: 15px;
+    border-radius: 3px;
+    text-decoration: none;
+    opacity: 0.9;
+}
+
+.p1 a.p1-cta:hover { opacity: 1; }
+
+.p1-inline-form { display: inline; }
+
+/* --- tables ------------------------------------------------------------- */
+
+.p1-scroll { overflow-x: auto; }
+
+.p1-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+}
+
+.p1-table th {
+    text-align: left;
+    font-weight: 600;
+    color: #5a6473;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-bottom: 1px solid #ccd3dc;
+    padding: 8px 12px 7px;
+    white-space: nowrap;
+}
+
+.p1-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #eef1f5;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    white-space: nowrap;
+}
+
+.p1-table td.text {
+    font-family: inherit;
+    white-space: normal;
+}
+
+.p1-table tr.best td {
+    background: rgba(39, 92, 178, 0.07);
+    font-weight: 600;
+}
+
+.p1-tag {
+    display: inline-block;
+    font-family: inherit;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #e7edf7;
+    color: #275CB2;
+}
+
+.p1-tag.label-tag { background: #fdeee7; color: #E4572E; }
+
+/* --- figures ------------------------------------------------------------ */
+
+.p1-figure {
+    border: 1px solid #e2e6ec;
+    border-radius: 4px;
+    padding: 14px;
+    text-align: center;
+    background: white;
+}
+
+.p1-figure img { max-width: 100%; height: auto; }
+
+.p1-figures {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+
+.p1-figures > * { flex: 1; min-width: 320px; }
+
+/* --- messages and callouts ---------------------------------------------- */
+
+.p1-message {
+    border-left: 3px solid #275CB2;
+    background: #f2f6fc;
+    padding: 11px 14px;
+    margin: 12px 0;
+    font-size: 14px;
+}
+
+.p1-message.error {
+    border-left-color: #C1121F;
+    background: #fdf2f3;
+}
+
+.p1-callout {
+    border: 1px dashed #ccd3dc;
+    border-radius: 4px;
+    padding: 14px 16px;
+    font-size: 14px;
+    color: #4a5462;
+    background: #fbfcfd;
+}
+
+.p1-empty {
+    text-align: center;
+    color: #7b8494;
+    padding: 34px 20px;
+    border: 1px dashed #ccd3dc;
+    border-radius: 4px;
+    font-size: 15px;
+}
+
+@media (max-width: 620px) {
+    .p1 { padding: 0 16px; }
+    .p1-rail a, .p1-rail span { font-size: 12px; }
+    .p1-rail .index { display: none; }
+}

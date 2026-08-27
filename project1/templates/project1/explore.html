@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'project1/style.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="box">
+    <div class="title-container">
+        <div class="title">{{ dataset.name }}</div>
+    </div>
+
+    <div class="p1">
+        {% include "project1/_rail.html" %}
+
+        <div class="p1-meta">
+            <div>Rows<strong>{{ dataset.n_rows }}</strong></div>
+            <div>Features<strong>{{ dataset.n_features }}</strong></div>
+            <div>Label<strong>{{ dataset.target_name }}</strong></div>
+            <div>Read as<strong>{{ task_label|lower }}</strong></div>
+        </div>
+
+        <div class="p1-note">Detected because {{ dataset.detection_reason }}.
+            <form class="p1-inline-form" method="post" action="{% url 'project1:set_task' dataset.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="task" value="{{ other_task }}">
+                <button type="submit" class="p1-button quiet" style="padding:3px 10px;font-size:12px;">Treat it as {{ other_task_label|lower }} instead</button>
+            </form>
+        </div>
+        {% if dataset.dropped_columns %}
+            <p class="p1-note">Ignored as identifiers: {{ dataset.dropped_columns|join:", " }}.</p>
+        {% endif %}
+
+        <h2>Visualise</h2>
+        <form class="p1-form" method="get">
+            <div class="p1-row">
+                <p>{{ form.plot.label_tag }}{{ form.plot }}</p>
+                <p>{{ form.x.label_tag }}{{ form.x }}</p>
+                <p>{{ form.y.label_tag }}{{ form.y }}</p>
+            </div>
+            <div class="p1-actions">
+                <button type="submit">Draw</button>
+                <span class="p1-note">The second feature is only used by the scatter plot.</span>
+            </div>
+        </form>
+
+        {% if plot_error %}
+            <div class="p1-message error">{{ plot_error }}</div>
+        {% elif plot_url %}
+            <div class="p1-figure" style="margin-top:18px;">
+                <img src="{{ plot_url }}" alt="Figure of the uploaded data">
+            </div>
+        {% endif %}
+
+        <h2>First rows</h2>
+        <div class="p1-scroll">
+            <table class="p1-table">
+                <tr>{% for column in preview_columns %}<th>{{ column }}</th>{% endfor %}</tr>
+                {% for row in preview_rows %}
+                <tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <h2>Column summary</h2>
+        <div class="p1-scroll">
+            <table class="p1-table">
+                <tr>
+                    <th>Column</th><th>Role</th><th>Type</th><th>Missing</th>
+                    <th>Distinct</th><th>Mean</th><th>Std</th><th>Min</th><th>Max</th>
+                </tr>
+                {% for row in summary %}
+                <tr>
+                    <td class="text">{{ row.name }}</td>
+                    <td class="text"><span class="p1-tag {% if row.role == 'label' %}label-tag{% endif %}">{{ row.role }}</span></td>
+                    <td class="text">{{ row.dtype }}</td>
+                    <td>{{ row.missing }}</td>
+                    <td>{{ row.unique }}</td>
+                    <td>{{ row.mean }}</td>
+                    <td>{{ row.std }}</td>
+                    <td>{{ row.minimum }}</td>
+                    <td>{{ row.maximum }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <div class="p1-actions" style="margin-top:26px;">
+            <a class="p1-cta" href="{% url 'project1:train' dataset.pk %}">Train a model on this</a>
+            <a class="p1-link" href="{% url 'project1:index' %}">Pick another dataset</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

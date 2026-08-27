@@ -1,0 +1,5 @@
+django>=4.2
+numpy
+pandas
+scikit-learn>=1.0
+matplotlib

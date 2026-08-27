@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'project1/style.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="box">
+    <div class="title-container">
+        <div class="title">{{ run.algorithm_label }}</div>
+    </div>
+
+    <div class="p1">
+        {% include "project1/_rail.html" %}
+
+        <div class="p1-meta">
+            <div>Best {{ run.hyperparameter|lower }}<strong>{{ run.best_value }}</strong></div>
+            <div>{{ run.score_label }} on the test set<strong>{{ run.best_score|floatformat:4 }}</strong></div>
+            <div>Training rows<strong>{{ result.n_train }}</strong></div>
+            <div>Test rows<strong>{{ result.n_test }}</strong></div>
+            <div>Models trained<strong>{{ rows|length }}</strong></div>
+            <div>Time<strong>{{ run.seconds }}s</strong></div>
+        </div>
+
+        <p class="p1-note">{{ test_percent }}% of {{ dataset.name }} was held back for
+        testing with seed {{ run.random_state }}{% if result.stratified %}, keeping the
+        class balance in both halves{% endif %}. {{ score_note }}</p>
+
+        {% if result.overfitting %}
+            <div class="p1-message">{{ result.overfitting }}</div>
+        {% endif %}
+
+        <h2>Score for each value</h2>
+        <div class="p1-figures">
+            <div class="p1-figure"><img src="{{ result.curve_url }}" alt="Score against hyperparameter value"></div>
+            <div class="p1-figure"><img src="{{ result.detail_url }}" alt="Predictions of the best model"></div>
+        </div>
+
+        <div class="p1-scroll" style="margin-top:20px;">
+            <table class="p1-table">
+                <tr>
+                    <th>{{ run.hyperparameter }}</th>
+                    <th>{{ run.score_label }} on the training set</th>
+                    <th>{{ run.score_label }} on the test set</th>
+                </tr>
+                {% for row in rows %}
+                <tr class="{% if row.is_best %}best{% endif %}">
+                    <td>{{ row.value }}</td>
+                    <td>{{ row.train|floatformat:4 }}</td>
+                    <td>{{ row.test|floatformat:4 }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <h2>How the features were prepared</h2>
+        <div class="p1-callout">
+            <p>Used as numbers: {{ result.numeric|join:", "|default:"none" }}.</p>
+            {% if result.categorical %}
+                <p>One hot encoded: {{ result.categorical|join:", " }}.</p>
+            {% endif %}
+            {% if result.ignored %}
+                <p>Left out because they hold too many distinct text values:
+                {{ result.ignored|join:", " }}.</p>
+            {% endif %}
+            <p>{{ algorithm_note }}</p>
+        </div>
+
+        <div class="p1-actions" style="margin-top:26px;">
+            <a class="p1-cta" href="{% url 'project1:train' dataset.pk %}">Run another sweep</a>
+            <a class="p1-link" href="{% url 'project1:explore' dataset.pk %}">Back to the data</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

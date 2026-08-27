@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'project1/style.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="box">
+    <div class="title-container">
+        <div class="title">Supervised learning interface</div>
+    </div>
+
+    <div class="p1">
+        {% include "project1/_rail.html" %}
+
+        <p class="lede">Upload a table, look at it, then train a model on it. The
+        first row of the CSV holds the column names and the last column holds the
+        value to predict.</p>
+
+        <h2>Upload a dataset</h2>
+        <form class="p1-form" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="p1-actions">
+                <button type="submit">Upload and explore</button>
+            </div>
+        </form>
+
+        <h2>Datasets already here</h2>
+        {% if datasets %}
+        <div class="p1-scroll">
+            <table class="p1-table">
+                <tr>
+                    <th>Name</th>
+                    <th>Rows</th>
+                    <th>Features</th>
+                    <th>Label</th>
+                    <th>Read as</th>
+                    <th>Uploaded</th>
+                    <th></th>
+                </tr>
+                {% for dataset in datasets %}
+                <tr>
+                    <td class="text"><a class="p1-link" href="{% url 'project1:explore' dataset.pk %}">{{ dataset.name }}</a></td>
+                    <td>{{ dataset.n_rows }}</td>
+                    <td>{{ dataset.n_features }}</td>
+                    <td class="text">{{ dataset.target_name }}</td>
+                    <td class="text"><span class="p1-tag">{{ dataset.get_detected_task_display }}</span></td>
+                    <td class="text">{{ dataset.uploaded_at|date:"j M, H:i" }}</td>
+                    <td class="text">
+                        <form method="post" action="{% url 'project1:delete' dataset.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="p1-button quiet">Remove</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        {% else %}
+            <div class="p1-empty">Nothing uploaded yet. Start with the form above.</div>
+        {% endif %}
+
+        <div class="p1-actions">
+            <a class="p1-link" href="{% url 'home:index' %}">Back to the project hub</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

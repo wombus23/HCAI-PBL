@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'project1/style.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="box">
+    <div class="title-container">
+        <div class="title">Train a model</div>
+    </div>
+
+    <div class="p1">
+        {% include "project1/_rail.html" %}
+
+        <div class="p1-meta">
+            <div>Dataset<strong>{{ dataset.name }}</strong></div>
+            <div>Rows<strong>{{ dataset.n_rows }}</strong></div>
+            <div>Label<strong>{{ dataset.target_name }}</strong></div>
+            <div>Problem<strong>{{ task_label|lower }}</strong></div>
+        </div>
+
+        <p class="lede">The data is split into a training half and a test half, one
+        model is trained per hyperparameter value, and every model is scored on
+        both halves. You choose the algorithm, the values, the split and the
+        score. Missing values, feature scaling and the encoding of text columns
+        are handled for you, because getting them wrong silently ruins the
+        result.</p>
+
+        <form class="p1-form" method="post">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+
+            <div class="p1-row">
+                <p>{{ form.algorithm.label_tag }}{{ form.algorithm }}{{ form.algorithm.errors }}</p>
+                <p>{{ form.score.label_tag }}{{ form.score }}{{ form.score.errors }}</p>
+            </div>
+
+            <p>
+                {{ form.values.label_tag }}{{ form.values }}
+                <span class="helptext" id="values-help">{{ form.values.help_text }}</span>
+                {{ form.values.errors }}
+            </p>
+
+            <div class="p1-row">
+                <p>
+                    {{ form.test_size.label_tag }}{{ form.test_size }}
+                    {{ form.test_size.errors }}
+                </p>
+                <p>
+                    {{ form.random_state.label_tag }}{{ form.random_state }}
+                    <span class="helptext">{{ form.random_state.help_text }}</span>
+                    {{ form.random_state.errors }}
+                </p>
+            </div>
+
+            {% if form.stratify.field.widget.is_hidden %}
+                {{ form.stratify }}
+            {% else %}
+                <p>{{ form.stratify }}<label style="display:inline">{{ form.stratify.label }}</label></p>
+            {% endif %}
+
+            <div class="p1-actions">
+                <button type="submit">Train and score</button>
+                <a class="p1-link" href="{% url 'project1:explore' dataset.pk %}">Back to the data</a>
+            </div>
+        </form>
+
+        <h2>What the algorithms do</h2>
+        <div class="p1-scroll">
+            <table class="p1-table">
+                <tr><th>Algorithm</th><th>Hyperparameter</th><th>In one line</th></tr>
+                {% for key, spec in algorithms %}
+                <tr>
+                    <td class="text">{{ spec.label }}</td>
+                    <td class="text">{{ spec.parameter_label }}</td>
+                    <td class="text">{{ spec.note }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <h2>What the scores mean</h2>
+        <div class="p1-scroll">
+            <table class="p1-table">
+                <tr><th>Score</th><th>In one line</th></tr>
+                {% for key, spec in scores %}
+                <tr>
+                    <td class="text">{{ spec.label }}</td>
+                    <td class="text">{{ spec.note }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <h2>Earlier runs on this dataset</h2>
+        {% if runs %}
+        <div class="p1-scroll">
+            <table class="p1-table">
+                <tr>
+                    <th>Algorithm</th><th>Hyperparameter</th><th>Best value</th>
+                    <th>Score</th><th>Result</th><th>When</th>
+                </tr>
+                {% for run in runs %}
+                <tr>
+                    <td class="text"><a class="p1-link" href="{% url 'project1:run' run.pk %}">{{ run.algorithm_label }}</a></td>
+                    <td class="text">{{ run.hyperparameter }}</td>
+                    <td>{{ run.best_value }}</td>
+                    <td class="text">{{ run.score_label }}</td>
+                    <td>{{ run.best_score|floatformat:4 }}</td>
+                    <td class="text">{{ run.created_at|date:"j M, H:i" }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        {% else %}
+            <div class="p1-empty">No runs yet. The results of every sweep are kept here so you can compare them.</div>
+        {% endif %}
+    </div>
+</div>
+
+{{ defaults|json_script:"algorithm-defaults" }}
+<script>
+    // Switching algorithm swaps in that algorithm's usual range of values, so
+    // the user never has to guess what a sensible starting grid looks like.
+    (function () {
+        var defaults = JSON.parse(document.getElementById("algorithm-defaults").textContent);
+        var algorithm = document.getElementById("id_algorithm");
+        var values = document.getElementById("id_values");
+        var help = document.getElementById("values-help");
+        if (!algorithm || !values) { return; }
+        algorithm.addEventListener("change", function () {
+            var spec = defaults[algorithm.value];
+            if (!spec) { return; }
+            values.value = spec.grid;
+            help.textContent = "One model is trained per value of " + spec.label.toLowerCase() + ".";
+        });
+    })();
+</script>
+{% endblock %}
