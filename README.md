@@ -83,3 +83,27 @@ handling of missing rows and the choice of complexity measure.
 The dataset ships as `project2/sample_data/penguins.csv` rather than being pulled
 in through the `palmerpenguins` package, so the app needs nothing unusual
 installed.
+
+### Project 3: Active learning for learning to defer
+
+`/project3/` — a classifier and a simulated human expert answering AG News
+articles together, with a PDF report available from a download button at the top
+of the page.
+
+- **Task 1.** TF-IDF and logistic regression, 0.9071 test accuracy.
+- **Task 2.** A simulated expert whose competence follows k-means regions of the
+  document space rather than the labels: very good in four regions, worse than
+  guessing in three, 0.655 overall.
+- **Task 3.** A rejector estimating where the expert beats the classifier lifts
+  the team to 0.9233 at an 8.5% deferral rate, with the evaluation covering the
+  quality of the deferral decisions and not just accuracy.
+- **Task 4.** Four active learning strategies compete for a budget of 1,000
+  expert answers. Selecting by deferral margin reaches 75% of the full label gain
+  in 300 questions where random needs 600.
+
+Task 5 was optional and is not implemented.
+
+The experiments are cached in `project3/results/results.json` and regenerated
+with `python manage.py run_experiments` (about 30 seconds, fully seeded). The
+figures on the page are redrawn from that file on each request, so no images are
+stored in the repository. `project3/README.md` has the reasoning.

@@ -1,0 +1,303 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'project3/style.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="box">
+    <div class="title-container">
+        <div class="title">Active learning for learning to defer</div>
+    </div>
+
+    <div class="p3">
+
+        <p class="lede">A classifier and a simulated human expert answering AG News
+        articles together. The classifier is good everywhere, the expert is very good
+        in some regions of the input space and worse than guessing in others, and the
+        system has to work out who should answer what — first with the expert's answers
+        in hand, then having to buy them one question at a time.</p>
+
+        {% if has_report %}
+        <p style="margin:18px 0 6px;">
+            <a class="p3-download" href="{% url 'project3:report' %}">Download the full report (PDF)</a>
+        </p>
+        {% endif %}
+
+        <div class="p3-headline">
+            <div>
+                <span class="value">{{ t1.accuracy }}</span>
+                <span class="caption">classifier alone<br>task 1 baseline</span>
+            </div>
+            <div>
+                <span class="value">{{ t2.accuracy }}</span>
+                <span class="caption">expert alone<br>task 2</span>
+            </div>
+            <div class="accent">
+                <span class="value">{{ t3.learned.accuracy }}</span>
+                <span class="caption">the two together<br>task 3, all expert labels</span>
+            </div>
+            <div class="accent">
+                <span class="value">{{ t4.summary.0.final }}</span>
+                <span class="caption">best strategy after {{ t4.strategies.random.queries|last }} questions<br>task 4</span>
+            </div>
+            <div>
+                <span class="value">{{ t3.ceiling }}</span>
+                <span class="caption">oracle deferral<br>upper bound</span>
+            </div>
+        </div>
+
+        <p class="p3-note">{{ meta.n_train }} training articles, {{ meta.n_test }} test
+        articles, {{ t1.n_features }} TF-IDF features, {{ meta.n_regions }} regions.
+        Results generated {{ meta.generated }} in {{ meta.seconds }} s by
+        <code>python manage.py run_experiments</code>.</p>
+
+        {# ---------------- task 1 ---------------- #}
+        <div class="p3-region" id="task1">
+            <div class="kicker">Task 1 · the baseline</div>
+            <h2>Classifier trained on every label</h2>
+
+            <p class="lede">TF-IDF over words and bigrams, then multinomial logistic
+            regression. Chosen over a transformer for three reasons: it trains in
+            seconds so every experiment below can be rerun, it needs nothing outside
+            scikit-learn, and its probabilities are usable as a confidence signal once
+            calibrated, which a linear SVM's decision values are not.</p>
+
+            <div class="p3-figures">
+                <div class="p3-figure"><img src="{{ figures.confusion }}" alt="Confusion matrix"></div>
+                <div style="flex:1 1 320px;">
+                    <div class="p3-scroll">
+                        <table class="p3-table">
+                            <tr><th>Class</th><th>Precision</th><th>Recall</th><th>F1</th><th>Support</th></tr>
+                            {% for row in t1.per_class %}
+                            <tr>
+                                <td class="text">{{ row.label }}</td>
+                                <td>{{ row.precision }}</td>
+                                <td>{{ row.recall }}</td>
+                                <td>{{ row.f1 }}</td>
+                                <td>{{ row.support }}</td>
+                            </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                    <div class="p3-terms" style="margin-top:16px;">
+                        {% for label, terms in t1.top_terms.items %}
+                        <p><strong>{{ label }}</strong><br>
+                        {% for term in terms %}<code>{{ term }}</code>{% endfor %}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# ---------------- task 2 ---------------- #}
+        <div class="p3-region" id="task2">
+            <div class="kicker">Task 2 · the simulated expert</div>
+            <h2>An expert with a competence profile</h2>
+
+            <p class="lede">Competence is attached to k-means regions of the document
+            space rather than to the label. Tying it to the label would make task 4
+            trivial: the profile could be inferred from the classifier's own
+            predictions without ever asking a question. Regions lean towards topics
+            without being topics, so the profile has to be bought with queries. When
+            the expert is wrong the wrong answer is drawn from a confusion profile
+            rather than uniformly, and answers are fixed per article, so asking twice
+            gives the same answer.</p>
+
+            <div class="p3-figure"><img src="{{ figures.expert }}" alt="Expert accuracy per region"></div>
+
+            <div class="p3-figures" style="margin-top:18px;">
+                <div style="flex:2 1 420px;">
+                    <div class="p3-scroll">
+                        <table class="p3-table">
+                            <tr><th>Region</th><th>Test articles</th><th>Designed</th><th>Measured</th><th>Leans</th><th>Purity</th></tr>
+                            {% for row in t2.by_region %}
+                            <tr>
+                                <td>{{ row.region }}</td>
+                                <td>{{ row.size }}</td>
+                                <td>{{ row.designed }}</td>
+                                <td>{{ row.accuracy }}</td>
+                                <td class="text">{{ row.dominant }}</td>
+                                <td>{{ row.purity }}</td>
+                            </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                </div>
+                <div style="flex:1 1 240px;">
+                    <div class="p3-scroll">
+                        <table class="p3-table">
+                            <tr><th>True class</th><th>Expert accuracy</th></tr>
+                            {% for row in t2.by_class %}
+                            <tr><td class="text">{{ row.label }}</td><td>{{ row.accuracy }}</td></tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                    <p class="p3-note">Per class accuracy is far flatter than per region
+                    accuracy. That gap is the point: the expert's strengths do not line
+                    up with the labels, so they cannot be guessed from them.</p>
+                </div>
+            </div>
+        </div>
+
+        {# ---------------- task 3 ---------------- #}
+        <div class="p3-region" id="task3">
+            <div class="kicker">Task 3 · learning to defer</div>
+            <h2>Deciding who answers</h2>
+
+            <p class="lede">With expert answers available for the whole training set,
+            a rejector estimates P(expert correct | x) from the text alone, and the
+            system defers when that beats the calibrated probability that the
+            classifier is right. Calibration is not optional here: the raw maximum
+            probability of a linear model is badly overconfident, and comparing it
+            directly against the rejector makes the system defer far too rarely.</p>
+
+            <div class="p3-figures">
+                <div class="p3-figure"><img src="{{ figures.coverage }}" alt="Coverage curves"></div>
+                <div class="p3-figure"><img src="{{ figures.calibration }}" alt="Calibration curve"></div>
+            </div>
+
+            <h2>Policies at the same deferral rate</h2>
+            <p class="p3-note">Every row below hands over the same share of articles, so
+            the comparison is about which ones, not how many.</p>
+            <div class="p3-scroll">
+                <table class="p3-table">
+                    <tr>
+                        <th>Policy</th><th>Team accuracy</th><th>Deferred</th>
+                        <th>Expert accuracy on those</th><th>Classifier accuracy on the rest</th>
+                        <th>Gains caught</th><th>Damage</th>
+                    </tr>
+                    <tr class="winner">
+                        <td class="text">learned rejector</td>
+                        <td>{{ t3.learned.accuracy }}</td>
+                        <td>{{ t3.learned.deferral_rate }}</td>
+                        <td>{{ t3.learned.accuracy_deferred }}</td>
+                        <td>{{ t3.learned.accuracy_retained }}</td>
+                        <td>{{ t3.learned.recall_of_gains }}</td>
+                        <td>{{ t3.learned.damage }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text">classifier confidence only</td>
+                        <td>{{ t3.confidence_only.accuracy }}</td>
+                        <td>{{ t3.confidence_only.deferral_rate }}</td>
+                        <td>{{ t3.confidence_only.accuracy_deferred }}</td>
+                        <td>{{ t3.confidence_only.accuracy_retained }}</td>
+                        <td>{{ t3.confidence_only.recall_of_gains }}</td>
+                        <td>{{ t3.confidence_only.damage }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text">random deferral</td>
+                        <td>{{ t3.random.accuracy }}</td>
+                        <td>{{ t3.random.deferral_rate }}</td>
+                        <td>{{ t3.random.accuracy_deferred }}</td>
+                        <td>{{ t3.random.accuracy_retained }}</td>
+                        <td>{{ t3.random.recall_of_gains }}</td>
+                        <td>{{ t3.random.damage }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text">oracle (defer iff the expert wins)</td>
+                        <td>{{ t3.oracle.accuracy }}</td>
+                        <td>{{ t3.oracle.deferral_rate }}</td>
+                        <td>{{ t3.oracle.accuracy_deferred }}</td>
+                        <td>{{ t3.oracle.accuracy_retained }}</td>
+                        <td>{{ t3.oracle.recall_of_gains }}</td>
+                        <td>{{ t3.oracle.damage }}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="p3-callout" style="margin-top:16px;">
+                <p><strong>Gains caught</strong> is the share of articles that only the
+                expert gets right which the system actually handed over.
+                <strong>Damage</strong> is the share of all articles the system gave
+                away that the classifier would have got right and the expert did not.
+                Both matter more than team accuracy for judging the deferral decisions
+                themselves, which is what the task asks for.</p>
+                <p>The learned rejector and the confidence rule land close on team
+                accuracy, but they are not doing the same thing: the expert is right on
+                {{ t3.learned.accuracy_deferred }} of what the rejector hands over
+                against {{ t3.confidence_only.accuracy_deferred }} for the confidence
+                rule, at {{ t3.learned.damage }} damage against
+                {{ t3.confidence_only.damage }}. Confidence finds hard articles; the
+                rejector finds articles this particular expert is good at, which is a
+                different question.</p>
+                <p>The system recovers {{ t3.normalised_gain }} of the distance between
+                the classifier alone and the oracle. The rejector's AUC for predicting
+                whether the expert is right is {{ t3.rejector_auc }}.</p>
+            </div>
+        </div>
+
+        {# ---------------- task 4 ---------------- #}
+        <div class="p3-region" id="task4">
+            <div class="kicker">Task 4 · active learning for competence discovery</div>
+            <h2>Buying the profile one question at a time</h2>
+
+            <p class="lede">No expert answers at the start. Each round picks
+            {{ t4.batch }} articles to ask about, the rejector is refitted on everything
+            answered so far, and the team is evaluated on the test set. Four strategies,
+            {{ t4.seeds|length }} seeds each, shaded by one standard deviation.</p>
+
+            <div class="p3-figures">
+                <div class="p3-figure"><img src="{{ figures.active }}" alt="Team accuracy against number of expert queries"></div>
+                <div class="p3-figure"><img src="{{ figures.active_auc }}" alt="Competence model AUC against number of queries"></div>
+            </div>
+
+            <div class="p3-scroll" style="margin-top:18px;">
+                <table class="p3-table">
+                    <tr>
+                        <th>Strategy</th><th>Team accuracy at {{ t4.strategies.random.queries|last }}</th>
+                        <th>Share of the full label gain</th>
+                        <th>Questions to reach 75% of it</th>
+                        <th>Competence AUC</th><th>Deferral rate</th>
+                    </tr>
+                    {% for row in t4.summary %}
+                    <tr class="{% if forloop.first %}winner{% endif %}">
+                        <td class="text">{{ row.strategy }}</td>
+                        <td>{{ row.final }}</td>
+                        <td>{{ row.share_of_gain }}</td>
+                        <td>{% if row.queries_to_75 %}{{ row.queries_to_75 }}{% else %}not reached{% endif %}</td>
+                        <td>{{ row.final_auc }}</td>
+                        <td>{{ row.final_deferral }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+
+            <div class="p3-callout" style="margin-top:16px;">
+                <p>The two figures disagree, and the disagreement is the finding.
+                Random sampling builds the best competence model by AUC, because it
+                trains on a representative sample of the input space. Deferral margin
+                builds a worse model of the expert overall and a better team, because
+                it spends its budget where the deferral decision is actually in the
+                balance. Precision about the expert's competence in a region where the
+                classifier is at 99% buys nothing: the system keeps those articles
+                either way.</p>
+                <p>Classifier uncertainty, the textbook active learning baseline, is no
+                better than random here. It selects articles that are hard to classify,
+                which is a different question from where the expert helps. Expert
+                uncertainty is worse than random: chasing points where the competence
+                model is unsure gives it a badly skewed training sample, and its
+                deferral rate collapses to {{ t4.summary.3.final_deferral }}.</p>
+            </div>
+        </div>
+
+        <div class="p3-region" id="reproduce">
+            <div class="kicker">Reproducing this</div>
+            <h2>Rerunning the experiments</h2>
+            <p class="lede">Everything on this page is read from
+            <code>project3/results/results.json</code>, which is committed so the page
+            works straight after a clone. To regenerate it:</p>
+            <p class="p3-formula">python manage.py run_experiments</p>
+            <p class="p3-note">Takes about half a minute. Every step is seeded, so a
+            rerun reproduces the committed numbers exactly. The figures on this page are
+            redrawn from the JSON on each request, so no images are stored in the
+            repository.</p>
+        </div>
+
+        <div class="p3-actions" style="margin-top:30px;">
+            <a class="p3-link" href="{% url 'home:index' %}">Back to the project hub</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'project3/style.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="box">
+    <div class="title-container">
+        <div class="title">Active learning for learning to defer</div>
+    </div>
+    <div class="p3">
+        <div class="p3-empty" style="margin-top:30px;">
+            <p>The experiment results have not been generated yet.</p>
+            <p class="p3-formula">python manage.py run_experiments</p>
+            <p>That writes <code>{{ path }}</code>, which this page reads. It takes
+            about half a minute.</p>
+        </div>
+        <div class="p3-actions" style="margin-top:24px;">
+            <a class="p3-link" href="{% url 'home:index' %}">Back to the project hub</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

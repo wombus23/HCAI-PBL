@@ -3,3 +3,8 @@ numpy
 pandas
 scikit-learn>=1.0
 matplotlib
+
+# Only needed to rebuild the project 3 PDF report with
+# `python manage.py build_report`. The built report is committed, so the app
+# runs and serves it without this installed.
+# reportlab
