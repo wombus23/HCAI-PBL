@@ -7,7 +7,7 @@ skeleton from https://github.com/ppaamm/HCAI-PBL.
 
 | Name | Matriculation number |
 | --- | --- |
-| Muhammad Noor Ullah Ejaz | 000000 |
+| Muhammad Noor Ullah Ejaz | 672421 |
 
 ## Running it
 
