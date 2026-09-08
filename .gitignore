@@ -65,6 +65,7 @@ db.sqlite3-journal
 media/project1/
 media/project2/
 media/project3/
+media/project4/
 
 # Flask stuff:
 instance/

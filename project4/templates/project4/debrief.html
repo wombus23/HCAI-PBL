@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'project4/style.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="box">
+    <div class="title-container">
+        <div class="title">What it learned about you</div>
+    </div>
+
+    <div class="p4">
+        <p class="lede">Thank you. Your answers were turned into a preference vector, one
+        weight per film feature, by fitting the Plackett-Luce model described in the
+        report. Here is what came out.</p>
+
+        <h2>Your taste, as the model sees it</h2>
+        <div class="p4-cards">
+            <div>
+                <p class="p4-note" style="margin-bottom:6px;">Pulls you towards a film</p>
+                <table class="p4-table">
+                    {% for row in profile.likes %}
+                    <tr><td class="text">{{ row.feature }}</td><td>+{{ row.weight }}</td></tr>
+                    {% empty %}
+                    <tr><td class="text">nothing stood out strongly</td><td>–</td></tr>
+                    {% endfor %}
+                </table>
+            </div>
+            <div>
+                <p class="p4-note" style="margin-bottom:6px;">Pushes you away</p>
+                <table class="p4-table">
+                    {% for row in profile.dislikes %}
+                    <tr><td class="text">{{ row.feature }}</td><td>{{ row.weight }}</td></tr>
+                    {% empty %}
+                    <tr><td class="text">nothing stood out strongly</td><td>–</td></tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+
+        <h2>What it would recommend</h2>
+        <p class="p4-note">The highest scoring films in the catalogue that you were not
+        shown during the study.</p>
+        <div class="p4-scroll">
+            <table class="p4-table">
+                <tr><th>Film</th><th>Year</th><th>Genres</th><th>Score for you</th></tr>
+                {% for film in recommendations %}
+                <tr>
+                    <td class="text">{{ film.title }}</td>
+                    <td>{{ film.year }}</td>
+                    <td class="text">{{ film.genres|join:", " }}</td>
+                    <td>{{ film.utility }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <h2>How the two blocks compared</h2>
+        <p class="p4-note">Accuracy is how often the model, fitted on that block alone,
+        predicted your held out comparisons correctly. Two blocks from one person is far
+        too little to conclude anything: this is the measurement the study collects from
+        every participant, shown here because it is yours.</p>
+        <div class="p4-scroll">
+            <table class="p4-table">
+                <tr><th>Block</th><th>Interface</th><th>Tasks</th><th>Minutes</th><th>Held out accuracy</th></tr>
+                {% for block in blocks %}
+                <tr>
+                    <td>{{ block.number }}</td>
+                    <td class="text">{{ block.label }}</td>
+                    <td>{{ block.tasks }}</td>
+                    <td>{{ block.minutes }}</td>
+                    <td>{{ block.accuracy|default:"–" }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <div class="p4-callout" style="margin-top:20px;">
+            <p>The study is comparing the two interfaces you just used, to find out which
+            one lets a recommender learn your taste faster. Your identifier is
+            {{ participant.code }}. Nothing recorded can be traced back to you.</p>
+        </div>
+
+        <div class="p4-actions" style="margin-top:26px;">
+            <a class="p4-link" href="{% url 'project4:index' %}">Back to the study page</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

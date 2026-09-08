@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'project4/style.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="box">
+    <div class="title-container">
+        <div class="title">How was that?</div>
+    </div>
+
+    <div class="p4">
+        <div class="p4-progress"><span style="width: {{ participant.progress }}%"></span></div>
+        {% if error %}<div class="p4-message error">{{ error }}</div>{% endif %}
+
+        <p class="lede">About the block you just finished: {{ condition_label|lower }}.
+        There are no right answers here either.</p>
+
+        <form method="post" class="p4-form">
+            {% csrf_token %}
+            {% for key, prompt, low, high in questions %}
+            <div class="p4-question">
+                <div class="prompt">{{ prompt }}</div>
+                <div class="p4-scale">
+                    <span class="p4-anchor">{{ low }}</span>
+                    {% for value in scale %}
+                    <label>
+                        <input type="radio" name="{{ key }}" value="{{ value }}" required>
+                        {{ value }}
+                    </label>
+                    {% endfor %}
+                    <span class="p4-anchor">{{ high }}</span>
+                </div>
+            </div>
+            {% endfor %}
+
+            <div class="p4-actions">
+                <button type="submit">
+                    {% if block_number == 1 %}Continue to the second block{% else %}Continue{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

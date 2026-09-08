@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'project4/style.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="box">
+    <div class="title-container">
+        <div class="title">One last question</div>
+    </div>
+
+    <div class="p4">
+        <p class="lede">You have now used both ways of being asked about films: choosing
+        between two, and ranking ten.</p>
+
+        <form method="post" class="p4-form">
+            {% csrf_token %}
+            <div class="p4-question">
+                <div class="prompt">If a film service asked you to do this once, which
+                would you rather it used?</div>
+                <p>
+                    <label style="font-weight:normal;"><input type="radio" name="preferred" value="pairwise" required> Choosing between two films</label><br>
+                    <label style="font-weight:normal;"><input type="radio" name="preferred" value="ranking"> Ranking ten films</label><br>
+                    <label style="font-weight:normal;"><input type="radio" name="preferred" value="no_preference"> No preference</label>
+                </p>
+            </div>
+
+            <div class="p4-question">
+                <div class="prompt">Roughly how many of the films shown had you heard of?</div>
+                <p>
+                    <label style="font-weight:normal;"><input type="radio" name="films_known" value="few" required> Hardly any</label><br>
+                    <label style="font-weight:normal;"><input type="radio" name="films_known" value="some"> About half</label><br>
+                    <label style="font-weight:normal;"><input type="radio" name="films_known" value="most"> Most of them</label>
+                </p>
+            </div>
+
+            <p>
+                <label for="comment">Anything you want to add? (optional)</label>
+                <input type="text" name="comment" id="comment" placeholder="Optional">
+                <span class="helptext">Only whether you wrote something is recorded, not
+                what you wrote.</span>
+            </p>
+
+            <div class="p4-actions">
+                <button type="submit">Finish and see what it learned</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -24,6 +24,8 @@ def index(request):
          "url_name": "project2:index"},
         {"name": "Project 3: Active learning for learning to defer",
          "url_name": "project3:index"},
+         {"name": "Project 4: Preference elicitation",
+         "url_name": "project4:index"},
     ]
     
     context = { 

@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'project4/style.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="box">
+    <div class="title-container">
+        <div class="title">{% if is_ranking %}Put these in your order{% else %}Which would you rather watch?{% endif %}</div>
+    </div>
+
+    <div class="p4">
+        <div class="p4-progress"><span style="width: {{ progress }}%"></span></div>
+
+        <p class="p4-note">
+            {% if phase == 'holdout' %}
+                A few more comparisons · {{ position }} of {{ total }}
+            {% else %}
+                Block {{ block_number }} of 2 · {{ condition_label }} · {{ position }} of {{ total }}
+            {% endif %}
+        </p>
+
+        <form method="post" id="task-form">
+            {% csrf_token %}
+            <input type="hidden" name="phase" value="{{ phase }}">
+            <input type="hidden" name="position" value="{{ position|add:'-1' }}">
+            <input type="hidden" name="shown" value="{{ shown }}">
+            <input type="hidden" name="order" id="order" value="">
+            <input type="hidden" name="seconds" id="seconds" value="0">
+
+            {% if is_ranking %}
+                <p class="lede">Drag them into order, best at the top. Use the arrows if
+                you prefer. There is no right answer and you do not have to have seen
+                them.</p>
+
+                <ul class="p4-rank" id="rank-list">
+                    {% for card in cards %}
+                    <li draggable="true" data-id="{{ card.id }}">
+                        <span class="position"></span>
+                        <span class="body">
+                            <span class="name">{{ card.title }}</span>
+                            <span class="meta">{{ card.year }} · {{ card.genres|join:", " }} · {{ card.duration }} min</span>
+                            {% if card.director %}<span class="meta">{{ card.director }}</span>{% endif %}
+                        </span>
+                        <span class="moves">
+                            <button type="button" class="up" aria-label="Move up">&#9650;</button>
+                            <button type="button" class="down" aria-label="Move down">&#9660;</button>
+                        </span>
+                    </li>
+                    {% endfor %}
+                </ul>
+
+                <div class="p4-actions">
+                    <button type="submit" id="submit-ranking">This is my order</button>
+                </div>
+            {% else %}
+                <div class="p4-choice">
+                    {% for card in cards %}
+                    <button type="button" class="p4-movie" data-id="{{ card.id }}">
+                        <span class="name">{{ card.title }}</span>
+                        <span class="meta">{{ card.year }} · {{ card.duration }} min · IMDb {{ card.score }}</span>
+                        <span class="p4-genres">
+                            {% for genre in card.genres %}<span>{{ genre }}</span>{% endfor %}
+                        </span>
+                        {% if card.director %}<span class="cast">Directed by {{ card.director }}</span>{% endif %}
+                        {% if card.stars %}<span class="cast">With {{ card.stars }}</span>{% endif %}
+                    </button>
+                    {% endfor %}
+                </div>
+                <p class="p4-note">Click the one you would rather watch. If you have seen
+                neither, go by which appeals more.</p>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<script>
+(function () {
+    var started = Date.now();
+    var form = document.getElementById("task-form");
+    var orderField = document.getElementById("order");
+    var secondsField = document.getElementById("seconds");
+    var submitted = false;
+
+    function send(order) {
+        if (submitted) { return; }          // double click must not post twice
+        submitted = true;
+        orderField.value = order.join(",");
+        secondsField.value = Date.now() - started;
+        form.submit();
+    }
+
+    var list = document.getElementById("rank-list");
+
+    if (!list) {
+        // Pairwise: the clicked film is first, the other second.
+        var buttons = Array.prototype.slice.call(document.querySelectorAll(".p4-movie"));
+        buttons.forEach(function (button) {
+            button.addEventListener("click", function () {
+                var chosen = button.dataset.id;
+                var rest = buttons.filter(function (b) { return b !== button; })
+                                  .map(function (b) { return b.dataset.id; });
+                send([chosen].concat(rest));
+            });
+        });
+        return;
+    }
+
+    // Ranking: drag and drop, with arrow buttons as the accessible fallback.
+    function renumber() {
+        Array.prototype.forEach.call(list.children, function (item, i) {
+            item.querySelector(".position").textContent = (i + 1) + ".";
+        });
+    }
+
+    var dragged = null;
+
+    Array.prototype.forEach.call(list.children, function (item) {
+        item.addEventListener("dragstart", function () {
+            dragged = item;
+            item.classList.add("dragging");
+        });
+        item.addEventListener("dragend", function () {
+            dragged = null;
+            item.classList.remove("dragging");
+            Array.prototype.forEach.call(list.children, function (other) {
+                other.classList.remove("over");
+            });
+            renumber();
+        });
+        item.addEventListener("dragover", function (event) {
+            event.preventDefault();
+            if (!dragged || dragged === item) { return; }
+            item.classList.add("over");
+            var box = item.getBoundingClientRect();
+            var below = event.clientY > box.top + box.height / 2;
+            list.insertBefore(dragged, below ? item.nextSibling : item);
+        });
+        item.addEventListener("dragleave", function () { item.classList.remove("over"); });
+
+        item.querySelector(".up").addEventListener("click", function () {
+            if (item.previousElementSibling) {
+                list.insertBefore(item, item.previousElementSibling);
+                renumber();
+            }
+        });
+        item.querySelector(".down").addEventListener("click", function () {
+            if (item.nextElementSibling) {
+                list.insertBefore(item.nextElementSibling, item);
+                renumber();
+            }
+        });
+    });
+
+    renumber();
+
+    document.getElementById("submit-ranking").addEventListener("click", function (event) {
+        event.preventDefault();
+        var order = Array.prototype.map.call(list.children, function (item) {
+            return item.dataset.id;
+        });
+        send(order);
+    });
+})();
+</script>
+{% endblock %}

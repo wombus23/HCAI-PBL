@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'project4/style.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="box">
+    <div class="title-container">
+        <div class="title">Preference elicitation</div>
+    </div>
+
+    <div class="p4">
+        <p class="lede">A user study comparing two ways of asking someone what films
+        they like: repeatedly choosing between two, or ranking ten at a time. The study
+        was designed but not run, as the project sheet specifies. What is here is the
+        protocol, the model behind it, and the working instrument a participant would
+        be given.</p>
+
+        <div class="p4-actions" style="margin:22px 0 10px; gap:14px;">
+            {% if has_report %}
+            <a class="p4-download" href="{% url 'project4:report' %}">Download the report (PDF)</a>
+            {% endif %}
+            <a class="p4-cta" href="{% url 'project4:consent' %}">Start the study</a>
+            <a class="p4-link" href="{% url 'project4:consent' %}?demo=1">Short demo run</a>
+        </div>
+
+        <p class="p4-note">The report covers the feature representation (task 1), the
+        Plackett-Luce extension of Bradley-Terry (task 2) and the study design (task 3).
+        The study link runs the real instrument (task 4): two blocks,
+        {{ full.pairwise_tasks }} comparisons and {{ full.ranking_tasks }} rankings,
+        about fifteen minutes. The demo is the same thing cut to
+        {{ demo.pairwise_tasks }} comparisons and {{ demo.ranking_tasks }} ranking, and
+        is flagged in the data so it can be excluded.</p>
+
+        <div class="p4-region" id="design">
+            <div class="kicker">Task 3 · the design in one paragraph</div>
+            <h2>What the study asks</h2>
+            <p class="lede">Every participant does both designs, in a counterbalanced
+            order, on disjoint sets of films. After each block they answer ten held out
+            comparisons that the model never saw, which is the primary outcome: does the
+            preference vector estimated from this interface predict choices the person
+            had not yet made? Workload is rated after each block, and at the end they
+            say which interface they would rather use again.</p>
+
+            <div class="p4-headline">
+                <div>
+                    <span class="value">{{ catalogue_size }}</span>
+                    <span class="caption">films in the catalogue<br>at least 25,000 IMDb votes</span>
+                </div>
+                <div>
+                    <span class="value">{{ n_features }}</span>
+                    <span class="caption">features per film<br>the dimension of w</span>
+                </div>
+                <div>
+                    <span class="value">within</span>
+                    <span class="caption">participants design<br>counterbalanced order</span>
+                </div>
+                {% if sim %}
+                <div class="accent">
+                    <span class="value">{{ sim.power.within_total_80 }}</span>
+                    <span class="caption">participants for 80% power<br>on the time matched effect</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if sim %}
+        <div class="p4-region" id="simulation">
+            <div class="kicker">Planning</div>
+            <h2>Simulating the study before running it</h2>
+            <p class="lede">The model is fully specified, so the study can be simulated
+            rather than guessed at. {{ sim.meta.participants }} synthetic participants
+            with known taste vectors answered both designs at matched budgets, and the
+            fitted vector was scored on {{ sim.meta.holdout_pairs }} held out
+            comparisons each. Simulated participants answer noisily, so the ceiling is
+            {{ sim.ceiling }} rather than 1.</p>
+
+            <div class="p4-figures">
+                <div class="p4-figure"><img src="{{ figures.events }}" alt="Accuracy against decisions made"></div>
+                <div class="p4-figure"><img src="{{ figures.time }}" alt="Accuracy against time budget"></div>
+            </div>
+
+            <div class="p4-callout" style="margin-top:16px;">
+                <p>Matched on decisions made, ranking wins clearly: a ranking of ten is
+                nine choices, and each of those choices is made against a wider field
+                than a pairwise comparison, so it is worth more. Matched on the
+                participant's time, the advantage nearly vanishes, because a ranking of
+                ten costs far more than nine times a single comparison.</p>
+                <p>That is the whole reason this study is worth running, and it is what
+                fixes the design: the time matched effect is about
+                {{ sim.power.effect }} accuracy, which needs roughly
+                {{ sim.power.within_total_80 }} participants within subjects and
+                {{ sim.power.between_per_group_80 }} per group between subjects. The
+                second number is why nobody should run this between participants.</p>
+            </div>
+
+            <div class="p4-figure" style="margin-top:18px;"><img src="{{ figures.difference }}" alt="Ranking advantage under both matchings"></div>
+            <p class="p4-note">Timing assumptions: {{ seconds_pairwise }} s per pairwise
+            comparison, {{ seconds_ranking }} s per ranking of ten. These are the numbers
+            the pilot exists to replace, and every planning figure above depends on them.
+            Regenerate with <code>python manage.py run_simulation</code>.</p>
+        </div>
+        {% endif %}
+
+        <div class="p4-region" id="data">
+            <div class="kicker">Collected so far</div>
+            <h2>Responses</h2>
+            <p class="lede">{{ n_participants }} non-demo participant{{ n_participants|pluralize }}
+            started, {{ n_finished }} finished. The study has not been run; anything here
+            is from testing the instrument.</p>
+            <div class="p4-actions">
+                <a class="p4-link" href="{% url 'project4:export' %}">Download the responses as CSV</a>
+            </div>
+        </div>
+
+        <div class="p4-actions" style="margin-top:30px;">
+            <a class="p4-link" href="{% url 'home:index' %}">Back to the project hub</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

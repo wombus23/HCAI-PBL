@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'project4/style.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="box">
+    <div class="title-container">
+        <div class="title">Before you start</div>
+    </div>
+
+    <div class="p4">
+        {% if error %}<div class="p4-message error">{{ error }}</div>{% endif %}
+        {% if is_demo %}<div class="p4-message">Demo run: shortened, and flagged in the
+        data so it can be excluded from any analysis.</div>{% endif %}
+
+        <div class="p4-consent">
+            <h3>What this is</h3>
+            <p>A study about how people tell a recommender what films they like. You will
+            be asked about films twice, in two different ways, and then shown what the
+            system worked out about your taste.</p>
+
+            <h3>What you will do</h3>
+            <p>Two blocks. In one, you choose which of two films you would rather watch,
+            {% if is_demo %}{{ demo.pairwise_tasks }}{% else %}{{ full.pairwise_tasks }}{% endif %}
+            times. In the other, you drag ten films into your order of preference,
+            {% if is_demo %}{{ demo.ranking_tasks }} time{% else %}{{ full.ranking_tasks }} times{% endif %}.
+            After each block there are
+            {% if is_demo %}{{ demo.holdout_pairs }}{% else %}{{ full.holdout_pairs }}{% endif %}
+            further comparisons and four short questions. About
+            {% if is_demo %}three{% else %}fifteen{% endif %} minutes in total.</p>
+
+            <h3>There are no right answers</h3>
+            <p>Nothing here is a test. If you have not seen a film, go by what you would
+            rather watch. If two feel equally appealing, pick either.</p>
+
+            <h3>What is recorded</h3>
+            <p>Which films you were shown, the order you put them in, how long each
+            screen took, and your answers to the questions. Nothing that identifies you:
+            no name, no email address, no IP address, and the comment box records only
+            whether you wrote something, not what.</p>
+
+            <h3>Your rights</h3>
+            <p>Taking part is voluntary. You can close the tab at any point and your
+            partial answers will not be analysed. Because the data cannot be linked back
+            to you, it cannot be withdrawn after you finish.</p>
+
+            <h3>Use of the data</h3>
+            <p>Anonymous responses would be used for research on preference elicitation
+            and could be published in aggregate. In a real deployment this section would
+            name the responsible researcher, the institution, the ethics approval number
+            and a contact address for questions or complaints.</p>
+        </div>
+
+        <form method="post" style="margin-top:22px;">
+            {% csrf_token %}
+            <input type="hidden" name="demo" value="{% if is_demo %}1{% else %}0{% endif %}">
+            <p>
+                <label style="display:flex; gap:10px; align-items:flex-start; font-weight:normal;">
+                    <input type="checkbox" name="agree" value="1" style="margin-top:3px;">
+                    <span>I have read the above, I am 18 or older, and I agree to take part.</span>
+                </label>
+            </p>
+            <div class="p4-actions">
+                <button type="submit">Start</button>
+                <a class="p4-link" href="{% url 'project4:index' %}">Back</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

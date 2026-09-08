@@ -1,0 +1,151 @@
+{
+ "meta": {
+  "participants": 150,
+  "holdout_pairs": 200,
+  "features": 25,
+  "catalogue": 2735,
+  "seconds_pairwise": 8.0,
+  "seconds_ranking": 100.0,
+  "ranking_size": 10,
+  "taste_sigma": 0.8,
+  "seed": 0
+ },
+ "ceiling": 0.8259,
+ "curves": {
+  "events": {
+   "budgets": [
+    9,
+    18,
+    27,
+    36,
+    45,
+    63,
+    90
+   ],
+   "pairwise": [
+    0.6608,
+    0.699,
+    0.7305,
+    0.742,
+    0.7489,
+    0.7653,
+    0.7786
+   ],
+   "pairwise_se": [
+    0.0061,
+    0.006,
+    0.0048,
+    0.0046,
+    0.0045,
+    0.0043,
+    0.004
+   ],
+   "ranking": [
+    0.6876,
+    0.7346,
+    0.7558,
+    0.7706,
+    0.7787,
+    0.7881,
+    0.7995
+   ],
+   "ranking_se": [
+    0.0063,
+    0.0051,
+    0.0043,
+    0.0042,
+    0.0042,
+    0.0041,
+    0.0039
+   ],
+   "difference": [
+    0.0269,
+    0.0355,
+    0.0253,
+    0.0287,
+    0.0299,
+    0.0228,
+    0.0209
+   ],
+   "difference_sd": [
+    0.0773,
+    0.0685,
+    0.0515,
+    0.0478,
+    0.0458,
+    0.0394,
+    0.0357
+   ]
+  },
+  "time": {
+   "budgets": [
+    120,
+    180,
+    240,
+    300,
+    420,
+    600
+   ],
+   "pairwise": [
+    0.6909,
+    0.7143,
+    0.7338,
+    0.7472,
+    0.7625,
+    0.7766
+   ],
+   "pairwise_se": [
+    0.0059,
+    0.0057,
+    0.0049,
+    0.0042,
+    0.0041,
+    0.0043
+   ],
+   "ranking": [
+    0.6939,
+    0.6982,
+    0.7325,
+    0.756,
+    0.766,
+    0.7829
+   ],
+   "ranking_se": [
+    0.0062,
+    0.0065,
+    0.005,
+    0.0047,
+    0.0041,
+    0.0045
+   ],
+   "difference": [
+    0.003,
+    -0.0161,
+    -0.0013,
+    0.0088,
+    0.0035,
+    0.0063
+   ],
+   "difference_sd": [
+    0.0843,
+    0.0734,
+    0.0555,
+    0.0486,
+    0.0411,
+    0.0433
+   ]
+  }
+ },
+ "power": {
+  "budget_seconds": 300,
+  "effect": 0.0088,
+  "sd": 0.0486,
+  "cohens_d": 0.181,
+  "between_per_group_80": 479,
+  "within_total_80": 240,
+  "events_effect": 0.0253,
+  "events_sd": 0.0515,
+  "events_within_total_80": 33,
+  "note": "Simulated participants vary only through their taste vector and their response noise. Real participants also vary in engagement and film knowledge, so the true variance is larger and these numbers are a floor. The pilot exists to measure it. The gap between the two matched budgets is the reason the study is run within participants: the time matched effect is small enough that a between participants design would need an implausible sample."
+ }
+}
