@@ -14,7 +14,7 @@ def index(request):
     
     # TODO: replace with the real group members before submitting.
     students = [
-        {"name": "Muhammad Noor Ullah Ejaz", "matriculation": "000000"},
+        {"name": "Muhammad Noor Ullah Ejaz", "matriculation": "672421"},
     ]
     
     projects = [
