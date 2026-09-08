@@ -1,109 +1,126 @@
-# Human-Centric AI: projects
+# Project 4: Preference elicitation
 
-Course projects for Human-Centric Artificial Intelligence, built on the django
-skeleton from https://github.com/ppaamm/HCAI-PBL.
+A user study comparing two ways of asking someone what films they like, plus the
+working instrument that would run it. The study was designed but not run, as the
+project sheet specifies.
 
-## Group
-
-| Name | Matriculation number |
-| --- | --- |
-| Muhammad Noor Ullah Ejaz | 000000 |
+The landing page at `/project4/` does the two things the sheet asks for: a
+download button for the PDF report covering tasks 1 to 3, and a link that starts
+the study itself (task 4).
 
 ## Running it
 
-Python 3.10 or newer. Nothing outside the standard scientific stack is used.
+    python manage.py migrate
+    python manage.py run_simulation     # ~45 s, rewrites results/simulation.json
+    python manage.py build_report4      # rewrites the PDF, needs reportlab
 
-```bash
-python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver
-```
+Both outputs are committed, so the page works straight after a clone. The
+simulation is seeded and reproduces exactly.
 
-The virtual environment is optional but keeps these packages out of your system
-python. `.venv/` is ignored by git, so it never ends up in the repository.
+## Files
 
-Then open http://127.0.0.1:8000/home/. Every project is reachable from that
-page.
+- `catalogue.py` — the films and the feature representation (task 1).
+- `preference.py` — Plackett-Luce, MAP fitting, held out scoring, recommendations (task 2).
+- `protocol.py` — the study parameters, in one place so the report and the instrument agree.
+- `simulation.py` — synthetic participants, used to size the study.
+- `models.py`, `views.py`, templates — the instrument (task 4).
+- `report.py` — builds the PDF from `protocol.py` and the simulation results.
 
-`python manage.py migrate` is not optional: project 1 stores uploaded datasets
-and training runs in the database, so the tables have to exist before the app
-will load.
+## Task 1: the features
 
-## Projects
+25 dimensions: 18 genre indicators, four standardized continuous features (year,
+duration, IMDb score, log vote count) and three audience rating groups.
 
-### Project 1: Supervised learning interface
+The binding constraint is the elicitation budget, not the dataset. Every feature
+is a number that has to be estimated from a few dozen answers, so the
+representation that would suit a recommender trained on millions of ratings is
+useless here. Director and cast identity are the painful omission: they matter
+enormously to real taste, but as one-hot features they would add thousands of
+unidentifiable dimensions.
 
-`/project1/` — upload a CSV, explore it, train models on it.
+The catalogue is filtered to the 2,735 films with at least 25,000 IMDb votes.
+That is a study decision rather than a modelling one: asking someone to rank ten
+films they have never heard of measures their reading of the metadata, not their
+taste.
 
-- **Upload.** Reads a CSV where the first row holds the column names and the
-  last column holds the label. Columns that only number the rows are detected
-  and dropped.
-- **Explore.** A preview, a per column summary table, and five figures: a
-  scatter plot of two features coloured by class, one feature against the label,
-  a per class histogram, the distribution of the label, and a correlation
-  heatmap.
-- **Train.** Five algorithms per problem type, a sweep over one hyperparameter,
-  a train and test split the user controls, and a choice of score. The results
-  page plots the score against the hyperparameter for both halves of the split
-  and shows a confusion matrix or a predicted against actual plot for the best
-  model.
-- Classification and regression are both supported. The type is detected from
-  the label column and can be overruled from the interface.
+## Task 2: Plackett-Luce
 
-`project1/README.md` covers the structure and the reasoning behind which parts
-of the pipeline the user controls and which the app decides on its own.
+A ranking is read as a sequence of choices — pick a favourite from ten, then from
+the remaining nine, and so on:
 
-Two sample datasets are in `project1/sample_data/`: `iris.csv` for
-classification and `diabetes.csv` for regression.
+    P(i1 > ... > in) = prod_k exp(w'x_ik) / sum_{j>=k} exp(w'x_ij)
 
-### Project 2: Explainability
+Three reasons for this formulation, in order of importance to the study:
 
-`/project2/` — one page, four linked regions, on the Palmer Penguins dataset.
+1. **It contains Bradley-Terry exactly** at n = 2. The study compares two
+   interfaces, so if each arm were fitted with a different model, any difference
+   could be the model rather than the interface.
+2. **The log likelihood is concave**, so with a Gaussian prior there is one
+   optimum, no restarts, no seeds. Every fit is reproducible from the answers.
+3. **It counts a ranking honestly.** Exploding a ranking of ten into its 45
+   implied pairs and feeding plain Bradley-Terry would treat them as 45
+   independent observations, overstating what a ranking is worth and biasing the
+   study towards the design under test. Nine choice events is what it is.
 
-- **Model and complexity.** A grid of decision trees and a grid of L1 penalised
-  logistic regressions are fitted, and a λ slider picks between the finished
-  models by maximising `accuracy − λ·Ω`. Ω is the number of leaves for a tree and
-  the number of features still in use for logistic regression. The selected model
-  is drawn, along with every model in the grid and the trade off line λ defines.
-- **Counterfactuals.** Pick a penguin and a target species, and see the closest
-  rows the model would put in that class, found by local sampling and ranked by
-  MAD weighted L1 distance. Categorical features are resampled rather than
-  noised, and contribute a flat cost when they change.
-- **Feature effects.** PDP and ALE for each of the four measurements, three
-  curves per plot, both written from scratch. ALE uses the exact analytic
-  derivative for logistic regression and finite differences for the tree, since a
-  tree has no useful derivative to integrate.
+Estimation is MAP under a Gaussian prior. The prior is load-bearing: with 25
+features and 30 answers the unregularized likelihood often has no finite maximum,
+since a participant who never saw a documentary has no finite best estimate for
+that weight.
 
-All three regions read the same model, so moving the λ slider changes every one
-of them. `project2/README.md` covers the reasoning in more detail, including the
-handling of missing rows and the choice of complexity measure.
+## Task 3: the study
 
-The dataset ships as `project2/sample_data/penguins.csv` rather than being pulled
-in through the `palmerpenguins` package, so the app needs nothing unusual
-installed.
+Within participants, both interfaces, counterbalanced order, disjoint film sets.
+Primary outcome is how well each block's fitted `w` predicts 10 held out
+comparisons the model never saw. There is no ground truth `w` for a real person,
+so recovery cannot be measured; prediction can, and it is what a recommender
+needs anyway.
 
-### Project 3: Active learning for learning to defer
+The sample size comes from simulating the study rather than guessing, which is
+possible because the model is fully specified. The simulation produced the design
+decision, not just a number:
 
-`/project3/` — a classifier and a simulated human expert answering AG News
-articles together, with a PDF report available from a download button at the top
-of the page.
+| Matched on | Ranking advantage | Within-subjects n | Between-subjects n per group |
+| --- | --- | --- | --- |
+| Time (300 s) | +0.009 | 240 | 479 |
+| Decisions (27) | +0.025 | 33 | — |
 
-- **Task 1.** TF-IDF and logistic regression, 0.9071 test accuracy.
-- **Task 2.** A simulated expert whose competence follows k-means regions of the
-  document space rather than the labels: very good in four regions, worse than
-  guessing in three, 0.655 overall.
-- **Task 3.** A rejector estimating where the expert beats the classifier lifts
-  the team to 0.9233 at an 8.5% deferral rate, with the evaluation covering the
-  quality of the deferral decisions and not just accuracy.
-- **Task 4.** Four active learning strategies compete for a budget of 1,000
-  expert answers. Selecting by deferral margin reaches 75% of the full label gain
-  in 300 questions where random needs 600.
+Matched on decisions made, ranking wins clearly. Matched on the participant's
+time, the advantage nearly vanishes, because a ranking of ten costs far more than
+nine times a single comparison. That gap is the substance of the study, and the
+between-subjects column is why it is run within participants.
 
-Task 5 was optional and is not implemented.
+The report covers the hypotheses, recruitment, procedure, measures, the
+preregistered analysis plan, threats to validity, and ethics.
 
-The experiments are cached in `project3/results/results.json` and regenerated
-with `python manage.py run_experiments` (about 30 seconds, fully seeded). The
-figures on the page are redrawn from that file on each request, so no images are
-stored in the repository. `project3/README.md` has the reasoning.
+## Task 4: the instrument
+
+Consent → block A → held out block → ratings → block B → held out → ratings →
+exit question → debrief.
+
+- Ranking is drag and drop, with arrow buttons as an accessible fallback.
+- Screen times are measured client side and stored per screen.
+- Films are sampled without replacement across the entire session, held out
+  blocks included, so the held out block measures prediction and not memory, and
+  the second interface is not scored on films the participant already considered.
+- Every answer is written as it is given, so a refresh, a back button or a closed
+  tab neither loses nor duplicates a response.
+- The debrief shows participants their own estimated taste profile and five
+  recommendations, which is both an honest thank you and a useful sanity check on
+  the model.
+- Responses export as CSV in the shape the analysis plan expects, at
+  `/project4/export/`.
+
+A shortened demo run is linked from the landing page for inspection. It is
+flagged `is_demo` in the database so it can be excluded from any analysis.
+
+## Known limits
+
+- Films are sampled uniformly at random, as the sheet specifies. Adaptive
+  selection is the obvious extension and would probably help the ranking design
+  more.
+- The catalogue is mainstream by construction, so nothing here generalises to
+  eliciting taste over an unfamiliar catalogue.
+- Ten is one ranking size. The interesting curve is over the size; this measures
+  one point on it.
+- Rebuilding the PDF needs reportlab, which is outside the allowed library set.
+  The built PDF is committed, so nothing needs it at runtime.
